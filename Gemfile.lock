@@ -296,13 +296,13 @@ GEM
     pry-remote (0.1.8)
       pry (~> 0.9)
       slop (~> 3.0)
-    pry-stack_explorer (0.4.9.3)
-      binding_of_caller (>= 0.7)
-      pry (>= 0.9.11)
+    pry-stack_explorer (0.5.1)
+      binding_of_caller (~> 0.7)
+      pry (~> 0.13)
     public_suffix (4.0.5)
     rack (2.2.2)
     rainbow (3.0.0)
-    rake (12.3.3)
+    rake (13.0.1)
     rb-readline (0.5.5)
     regexp_parser (1.7.0)
     rexml (3.2.4)
@@ -466,7 +466,7 @@ DEPENDENCIES
   pry-byebug
   pry-remote
   pry-stack_explorer
-  rake (<= 12.3.3)
+  rake
   rb-readline
   rspec-core (~> 3.5)
   rspec-expectations (~> 3.5)
