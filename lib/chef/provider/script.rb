@@ -23,7 +23,7 @@ require "forwardable" unless defined?(Forwardable)
 
 class Chef
   class Provider
-    class Script < Chef::Provider::Execute
+    class Script < Chef::Provider
       extend Forwardable
 
       provides :bash

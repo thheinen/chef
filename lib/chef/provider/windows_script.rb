@@ -21,7 +21,7 @@ require_relative "../mixin/windows_architecture_helper"
 
 class Chef
   class Provider
-    class WindowsScript < Chef::Provider::Script
+    class WindowsScript < Chef::Provider::Execute
 
       protected
 
