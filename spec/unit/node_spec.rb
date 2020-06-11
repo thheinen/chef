@@ -1483,9 +1483,9 @@ describe Chef::Node do
         end
       end
 
-      context "with whitelisted attributes configured" do
-        it "should only save whitelisted attributes (and subattributes)" do
-          Chef::Config[:default_attribute_whitelist] = [
+      context "with alloweded attributes configured" do
+        it "should only save alloweded attributes (and subattributes)" do
+          Chef::Config[:default_attribute_allowed] = [
             ["filesystem", "/dev/disk0s2"],
             "network/interfaces/eth0",
           ]
@@ -1525,8 +1525,8 @@ describe Chef::Node do
           node.save
         end
 
-        it "should save false-y whitelisted attributes" do
-          Chef::Config[:default_attribute_whitelist] = [
+        it "should save false-y alloweded attributes" do
+          Chef::Config[:default_attribute_allowed] = [
             "foo/bar/baz",
           ]
 
@@ -1560,8 +1560,8 @@ describe Chef::Node do
           node.save
         end
 
-        it "should not save any attributes if the whitelist is empty" do
-          Chef::Config[:default_attribute_whitelist] = []
+        it "should not save any attributes if the allowed is empty" do
+          Chef::Config[:default_attribute_allowed] = []
 
           node.default = {
               "filesystem" => {
@@ -1583,9 +1583,9 @@ describe Chef::Node do
         end
       end
 
-      context "with blacklisted attributes configured" do
-        it "should only save non-blacklisted attributes (and subattributes)" do
-          Chef::Config[:default_attribute_blacklist] = [
+      context "with blocklisted attributes configured" do
+        it "should only save non-blocklisted attributes (and subattributes)" do
+          Chef::Config[:default_attribute_blocklist] = [
             ["filesystem", "/dev/disk0s2"],
             "network/interfaces/eth0",
           ]
@@ -1624,8 +1624,8 @@ describe Chef::Node do
           node.save
         end
 
-        it "should save all attributes if the blacklist is empty" do
-          Chef::Config[:default_attribute_blacklist] = []
+        it "should save all attributes if the blocklist is empty" do
+          Chef::Config[:default_attribute_blocklist] = []
 
           node.default = {
               "filesystem" => {
