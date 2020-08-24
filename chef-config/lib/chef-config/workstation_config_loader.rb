@@ -70,7 +70,9 @@ module ChefConfig
     end
 
     def load
-      load_credentials(profile)
+      config = load_credentials(profile)
+      apply_credentials(config[profile], profile)
+
       # Ignore it if there's no explicit_config_file and can't find one at a
       # default path.
       unless config_location.nil?

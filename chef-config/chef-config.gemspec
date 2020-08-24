@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "fuzzyurl"
   spec.add_dependency "addressable"
   spec.add_dependency "tomlrb", "~> 1.2"
+  spec.add_dependency "vault", "~> 0.15.0"
 
   spec.add_development_dependency "rake"
 

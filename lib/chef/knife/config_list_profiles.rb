@@ -37,10 +37,10 @@ class Chef
       end
 
       def run
-        credentials_data = self.class.config_loader.parse_credentials_file
+        credentials_data = self.class.config_loader.parse_credentials
         if credentials_data.nil? || credentials_data.empty?
           # Should this just show the ambient knife.rb config as "default" instead?
-          ui.fatal("No profiles found, #{self.class.config_loader.credentials_file_path} does not exist or is empty")
+          ui.fatal("No profiles found")
           exit 1
         end
 

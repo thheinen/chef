@@ -842,6 +842,13 @@ module ChefConfig
     # The selected profile when using credentials.
     default :profile, nil
 
+    # Additional configuration for credentials source.
+    config_context :credentials do
+      config_strict_mode false
+
+      default :type, 'file'
+    end
+
     default :chef_guid_path do
       PathHelper.join(config_dir, "#{ChefConfig::Dist::SHORT}_guid")
     end

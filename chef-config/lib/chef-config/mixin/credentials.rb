@@ -16,6 +16,7 @@
 #
 
 require "tomlrb"
+require "vault"
 require_relative "../path_helper"
 
 module ChefConfig
@@ -48,12 +49,51 @@ module ChefConfig
         end
       end
 
+      # Load and process the active credentials.
+      #
+      # @see WorkstationConfigLoader#apply_credentials
+      # @param profile [String, nil] Optional override for the active profile,
+      #   normally set via a command-line option.
+      # @return [void]
+      def load_credentials(profile = nil)
+        type = Chef::Config[:credentials].type
+
+        method = "load_credentials_#{type}"
+        if Credentials.method_defined?(method)
+          send(method.to_sym, profile)
+        else
+          raise ChefConfig::ConfigurationError, "Credentials type #{type} not known."
+        end
+      end
+
+      # List profiles available
+      #
+      # @return [Array<String>]
+      def list_profiles
+        type = Chef::Config[:credentials].type
+        method = "list_profiles_#{type}"
+
+        send(method.to_sym) if Credentials.method_defined?(method)
+      end
+
+      # Get all credential data available.
+      #
+      # @return [Hash]
+      def parse_credentials
+        type = Chef::Config[:credentials].type
+        method = "parse_credentials_#{type}"
+
+        send(method.to_sym) if Credentials.method_defined?(method)
+      end
+
+      private
+
       # Compute the path to the credentials file.
       #
       # @since 14.4
       # @return [String]
       def credentials_file_path
-        PathHelper.home(ChefConfig::Dist::USER_CONF_DIR, "credentials").freeze
+        Chef::Config[:credentials][:path] || PathHelper.home(ChefConfig::Dist::USER_CONF_DIR, "credentials").freeze
       end
 
       # Load and parse the credentials file.
@@ -76,13 +116,12 @@ module ChefConfig
         end
       end
 
-      # Load and process the active credentials.
+      # Load and process the active credentials from file.
       #
-      # @see WorkstationConfigLoader#apply_credentials
       # @param profile [String, nil] Optional override for the active profile,
       #   normally set via a command-line option.
       # @return [void]
-      def load_credentials(profile = nil)
+      def load_credentials_file(profile = nil)
         profile = credentials_profile(profile)
         config = parse_credentials_file
         return if config.nil? # No credentials, nothing to do here.
@@ -94,7 +133,80 @@ module ChefConfig
 
           raise ChefConfig::ConfigurationError, "Profile #{profile} doesn't exist. Please add it to #{credentials_file_path}."
         end
-        apply_credentials(config[profile], profile)
+
+        config[profile].map { |k, v| [k.to_sym, v] }.to_h
+      end
+
+      # List profiles in credentials file.
+      #
+      # @return [Array<String>]
+      def list_profiles_file
+        parse_credentials_file.keys
+      end
+
+      # Load and process the active credentials from Hashicorp Vault.
+      #
+      # @param profile [String, nil] Optional override for the active profile,
+      #   normally set via a command-line option.
+      # @return [void]
+      def load_credentials_vault(profile = nil)
+        basepath = Chef::Config[:credentials].basepath
+
+        credentials = vault_document("#{basepath}/#{profile}")
+        raise ChefConfig::ConfigurationError, "Profile '#{profile}' has no credentials in Vault at '#{basepath}/#{profile}'." unless credentials
+
+        credentials
+      end
+
+      # List profiles in Hashicorp Vault.
+      #
+      # @return [Array<String>]
+      def list_profiles_vault
+        basepath = Chef::Config[:credentials].basepath
+
+        vault_subkeys(basepath)
+      end
+
+      def parse_credentials_vault
+        credentials = {}
+
+        list_profiles_vault.each do |profile|
+          credentials[profile] = load_credentials_vault(profile)
+        end
+
+        credentials
+      end
+
+      def vault
+        return @vault unless @vault.nil?
+
+        @vault = Vault::Client.new(address: Chef::Config[:credentials].address)
+        @vault.token = Chef::Config[:credentials].token
+
+        @vault
+      end
+
+      def vault_document(path)
+        engine = vault_engine(path)
+        document = vault_path(path)
+
+        result = vault.kv(engine).read(document)
+        result&.data
+      end
+
+      def vault_subkeys(path)
+        engine = vault_engine(path)
+        document = vault_path(path)
+
+        vault.kv(engine).list(document)
+      end
+
+      def vault_engine(path)
+        path.split('/').first
+      end
+
+      def vault_path(path)
+        path.split('/').slice(1..-1).join('/')
       end
     end
   end
