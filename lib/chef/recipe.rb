@@ -21,8 +21,86 @@ autoload :YAML, "yaml"
 require_relative "dsl/recipe"
 require_relative "mixin/from_file"
 require_relative "mixin/deprecation"
+require_relative "mixin/convert_to_class_name"
 
 class Chef
+  # TODO: Extract
+  class YamlTag
+    extend Chef::Mixin::ConvertToClassName
+
+    def self.descendants
+      ObjectSpace.each_object(Class).select { |klass| klass < self }
+    end
+
+    def self.handle
+      basename = self.class.to_s.delete_suffix('Tag')
+
+      convert_to_snake_case(basename)
+    end
+
+    def self.aliases
+      []
+    end
+
+    def init_with(coder)
+      @value = coder.scalar
+    end
+
+    # @todo Generally frowned upon
+    def execute_in_context(code)
+      require 'binding_of_caller' unless defined?(Binding.of_caller)
+
+      context = binding.callers.find { |b| b.frame_description == "run_action" }
+      context.receiver.instance_eval code
+    end
+  end
+
+  class RubyTag < YamlTag
+    def to_proc
+      Proc.new { execute_in_context @value.to_s }
+    end
+  end
+
+  class NodeTag < YamlTag
+    def self.aliases
+      %w[attribute]
+    end
+
+    def to_proc
+      Proc.new do
+        attribute_path = @value.split('.').map { |e| Integer(e) rescue e }
+
+        execute_in_context node.dig(*attribute_path)
+      end
+    end
+  end
+
+  # TODO: How to get all the platform helpers in?
+  # List Chef::DSL namespace, filter by "\?$"
+  # for each do Kernel.public_method(:pp).parameters.first.count
+  # - use "#{name}" if 0
+  # - use "#{name} @value" else (b/c can be text or array)
+  # check Arraysize vs count. Not same? Error out
+
+  class LinuxTag < YamlTag
+    def to_proc
+      Proc.new { execute_in_context "linux?" }
+    end
+  end
+=begin
+  class PlatformFamilyTag < YamlTag
+    def self.handle
+      "!platform_family?"
+    end
+
+    # 2/24/2022 th: Wrong context
+    def to_proc
+      Proc.new { eval("platform_family? @value") }
+    end
+  end
+=end
+
+
   # == Chef::Recipe
   # A Recipe object is the context in which Chef recipes are evaluated.
   class Recipe
@@ -100,8 +178,23 @@ class Chef
       end
     end
 
+    def initialize_yaml_tags
+      @yamltags = []
+
+      YamlTag.descendants.each do |tag|
+        @yamltags << tag
+        YAML.add_tag("!#{tag.handle}", tag)
+
+        tag.aliases.each do |alias_tag|
+          YAML.add_tag("!#{alias_tag}", tag)
+        end
+      end
+    end
+
     def from_yaml(string)
-      res = ::YAML.safe_load(string)
+      initialize_yaml_tags
+
+      res = ::YAML.safe_load(string, @yamltags)
       unless res.is_a?(Hash) && res.key?("resources")
         raise ArgumentError, "YAML recipe '#{source_file}' must contain a top-level 'resources' hash (YAML sequence), i.e. 'resources:'"
       end
@@ -115,8 +208,11 @@ class Chef
         name = rhash.delete("name")
         res = declare_resource(type, name)
         rhash.each do |key, value|
-          # FIXME?: we probably need a way to instance_exec a string that contains block code against the property?
-          res.send(key, value)
+          if value.is_a?(YamlTag)
+            res.send(key, &value)
+          else
+            res.send(key, value)
+          end
         end
       end
     end
