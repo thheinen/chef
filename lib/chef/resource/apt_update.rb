@@ -62,8 +62,8 @@ class Chef
         #
         # @return [Boolean]
         def apt_up_to_date?
-          ::File.exist?("#{STAMP_DIR}/update-success-stamp") &&
-            ::File.mtime("#{STAMP_DIR}/update-success-stamp") > Time.now - new_resource.frequency
+          ::ChefIO::File.exist?("#{STAMP_DIR}/update-success-stamp") &&
+            ::ChefIO::File.mtime("#{STAMP_DIR}/update-success-stamp") > Time.now - new_resource.frequency
         end
 
         def do_update

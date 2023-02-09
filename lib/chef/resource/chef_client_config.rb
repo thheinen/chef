@@ -255,23 +255,23 @@ class Chef
       action :create, description: "Create a client.rb config file and folders for configuring #{ChefUtils::Dist::Infra::PRODUCT}." do
         [
           new_resource.config_directory,
-          (::File.dirname(new_resource.log_location) if new_resource.log_location.is_a?(String) && !%w{STDOUT STDERR}.include?(new_resource.log_location) && !new_resource.log_location.empty?),
+          (::ChefIO::File.dirname(new_resource.log_location) if new_resource.log_location.is_a?(String) && !%w{STDOUT STDERR}.include?(new_resource.log_location) && !new_resource.log_location.empty?),
           new_resource.file_backup_path,
           new_resource.file_cache_path,
-          ::File.join(new_resource.config_directory, "client.d"),
-          (::File.dirname(new_resource.pid_file) unless new_resource.pid_file.nil?),
+          ::ChefIO::File.join(new_resource.config_directory, "client.d"),
+          (::ChefIO::File.dirname(new_resource.pid_file) unless new_resource.pid_file.nil?),
         ].compact.each do |dir_path|
 
           directory dir_path do
             user new_resource.user unless new_resource.user.nil?
             group new_resource.group unless new_resource.group.nil?
-            mode dir_path == ::File.dirname(new_resource.log_location.to_s) ? "0755" : "0750"
+            mode dir_path == ::ChefIO::File.dirname(new_resource.log_location.to_s) ? "0755" : "0750"
             recursive true
           end
         end
 
-        template ::File.join(new_resource.config_directory, "client.rb") do
-          source ::File.expand_path("support/client.erb", __dir__)
+        template ::ChefIO::File.join(new_resource.config_directory, "client.rb") do
+          source ::ChefIO::File.expand_path("support/client.erb", __dir__)
           user new_resource.user unless new_resource.user.nil?
           group new_resource.group unless new_resource.group.nil?
           local true
@@ -313,7 +313,7 @@ class Chef
       end
 
       action :remove, description: "Remove a client.rb config file for configuring #{ChefUtils::Dist::Infra::PRODUCT}." do
-        file ::File.join(new_resource.config_directory, "client.rb") do
+        file ::ChefIO::File.join(new_resource.config_directory, "client.rb") do
           action :delete
         end
       end

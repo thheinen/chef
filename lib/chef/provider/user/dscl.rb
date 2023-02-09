@@ -61,12 +61,12 @@ class Chef
           super
 
           requirements.assert(:all_actions) do |a|
-            a.assertion { ::File.exist?("/usr/bin/dscl") }
+            a.assertion { ::ChefIO::File.exist?("/usr/bin/dscl") }
             a.failure_message(Chef::Exceptions::User, "Cannot find binary '/usr/bin/dscl' on the system for #{new_resource}!")
           end
 
           requirements.assert(:all_actions) do |a|
-            a.assertion { ::File.exist?("/usr/bin/plutil") }
+            a.assertion { ::ChefIO::File.exist?("/usr/bin/plutil") }
             a.failure_message(Chef::Exceptions::User, "Cannot find binary '/usr/bin/plutil' on the system for #{new_resource}!")
           end
 
@@ -297,11 +297,11 @@ in 'password', with the associated 'salt' and 'iterations'.")
         end
 
         def current_home_exists?
-          !!current_resource.home && ::File.exist?(current_resource.home)
+          !!current_resource.home && ::ChefIO::File.exist?(current_resource.home)
         end
 
         def new_home_exists?
-          ::File.exist?(new_resource.home)
+          ::ChefIO::File.exist?(new_resource.home)
         end
 
         def ditto_home
@@ -312,11 +312,11 @@ in 'password', with the associated 'salt' and 'iterations'.")
           logger.trace("#{new_resource} moving #{self} home from #{current_resource.home} to #{new_resource.home}")
           new_resource.gid(STAFF_GROUP_ID) if new_resource.gid.nil?
           src = current_resource.home
-          FileUtils.mkdir_p(new_resource.home)
-          files = ::Dir.glob("#{Chef::Util::PathHelper.escape_glob_dir(src)}/*", ::File::FNM_DOTMATCH) - ["#{src}/.", "#{src}/.."]
-          ::FileUtils.mv(files, new_resource.home, force: true)
-          ::FileUtils.rmdir(src)
-          ::FileUtils.chown_R(new_resource.username, new_resource.gid.to_s, new_resource.home)
+          ChefIO::FileUtils.mkdir_p(new_resource.home)
+          files = ::ChefIO::Dir.glob("#{Chef::Util::PathHelper.escape_glob_dir(src)}/*", ::File::FNM_DOTMATCH) - ["#{src}/.", "#{src}/.."]
+          ::ChefIO::FileUtils.mv(files, new_resource.home, force: true)
+          ::ChefIO::FileUtils.rmdir(src)
+          ::ChefIO::FileUtils.chown_R(new_resource.username, new_resource.gid.to_s, new_resource.home)
         end
 
         #
@@ -404,7 +404,7 @@ in 'password', with the associated 'salt' and 'iterations'.")
         def remove_user
           if new_resource.manage_home
             # Remove home directory
-            FileUtils.rm_rf(current_resource.home)
+            ChefIO::FileUtils.rm_rf(current_resource.home)
           end
 
           # Remove the user from its groups

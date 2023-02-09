@@ -27,7 +27,7 @@ class Chef
                             require_relative "../win32/file"
                             Chef::ReservedNames::Win32::File
                           else
-                            ::File
+                            ::ChefIO::File
                           end
       end
     end

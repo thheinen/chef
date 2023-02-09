@@ -60,9 +60,9 @@ class Chef
 
       def use_tempfile_if_missing(file)
         tempfile = nil
-        unless File.exist?(file)
+        unless ChefIO::File.exist?(file)
           Chef::Log.trace("File #{file} does not exist to diff against, using empty tempfile")
-          tempfile = Tempfile.new("chef-diff")
+          tempfile = ChefIO::Tempfile.new("chef-diff")
           file = tempfile.path
         end
         yield file
@@ -89,17 +89,17 @@ class Chef
         diff_str = ""
         file_length_difference = 0
 
-        old_data = IO.readlines(old_file).map(&:chomp)
-        new_data = IO.readlines(new_file).map(&:chomp)
+        old_data = ChefIO::IO.readlines(old_file).map(&:chomp)
+        new_data = ChefIO::IO.readlines(new_file).map(&:chomp)
         diff_data = ::Diff::LCS.diff(old_data, new_data)
 
         return diff_str if old_data.empty? && new_data.empty?
         return "No differences encountered\n" if diff_data.empty?
 
         # write diff header (standard unified format)
-        ft = File.stat(old_file).mtime.localtime.strftime("%Y-%m-%d %H:%M:%S.%N %z")
+        ft = ChefIO::File.stat(old_file).mtime.localtime.strftime("%Y-%m-%d %H:%M:%S.%N %z")
         diff_str << "--- #{old_file}\t#{ft}\n"
-        ft = File.stat(new_file).mtime.localtime.strftime("%Y-%m-%d %H:%M:%S.%N %z")
+        ft = ChefIO::File.stat(new_file).mtime.localtime.strftime("%Y-%m-%d %H:%M:%S.%N %z")
         diff_str << "+++ #{new_file}\t#{ft}\n"
 
         # loop over diff hunks. if a hunk overlaps with the last hunk,
@@ -131,7 +131,7 @@ class Chef
         diff_filesize_threshold = Chef::Config[:diff_filesize_threshold]
         diff_output_threshold = Chef::Config[:diff_output_threshold]
 
-        if ::File.size(old_file) > diff_filesize_threshold || ::File.size(new_file) > diff_filesize_threshold
+        if ::ChefIO::File.size(old_file) > diff_filesize_threshold || ::ChefIO::File.size(new_file) > diff_filesize_threshold
           return "(file sizes exceed #{diff_filesize_threshold} bytes, diff output suppressed)"
         end
 

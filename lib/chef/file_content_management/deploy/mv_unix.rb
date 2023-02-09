@@ -31,13 +31,13 @@ class Chef
           # this is very simple, but it ensures that ownership and file modes take
           # good defaults, in particular mode needs to obey umask on create
           Chef::Log.trace("Touching #{file} to create it")
-          FileUtils.touch(file)
+          ChefIO::FileUtils.touch(file)
         end
 
         def deploy(src, dst)
           # we are only responsible for content so restore the dst files perms
           Chef::Log.trace("Reading modes from #{dst} file")
-          stat = ::File.stat(dst)
+          stat = ::ChefIO::File.stat(dst)
           mode = stat.mode & 07777
           uid  = stat.uid
           gid  = stat.gid
@@ -54,22 +54,22 @@ class Chef
           # the right thing is to fix the ownership of the file to the user running the command
           # (which requires write perms to the directory, or mv will throw an exception)
           begin
-            ::File.chown(uid, nil, src)
+            ::ChefIO::File.chown(uid, nil, src)
           rescue Errno::EPERM
             Chef::Log.warn("Could not set uid = #{uid} on #{src}, file modes not preserved")
           end
           begin
-            ::File.chown(nil, gid, src)
+            ::ChefIO::File.chown(nil, gid, src)
           rescue Errno::EPERM
             Chef::Log.warn("Could not set gid = #{gid} on #{src}, file modes not preserved")
           end
 
           # i own the inode, so should be able to at least chmod it
           # NOTE: this must come last due to POSIX stripping sticky mode bits on chown/chgrp
-          ::File.chmod(mode, src)
+          ::ChefIO::File.chmod(mode, src)
 
           Chef::Log.trace("Moving temporary file #{src} into place at #{dst}")
-          FileUtils.mv(src, dst)
+          ChefIO::FileUtils.mv(src, dst)
         end
       end
     end

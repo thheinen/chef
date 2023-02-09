@@ -27,7 +27,7 @@ class Chef
 
         def load_current_resource
           super
-          raise Chef::Exceptions::User, "Could not find binary /usr/sbin/pw for #{new_resource}" unless ::File.exist?("/usr/sbin/pw")
+          raise Chef::Exceptions::User, "Could not find binary /usr/sbin/pw for #{new_resource}" unless ::ChefIO::File.exist?("/usr/sbin/pw")
         end
 
         def create_user

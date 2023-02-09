@@ -35,12 +35,12 @@ class Chef
       class Cp
         def create(file)
           Chef::Log.trace("Touching #{file} to create it")
-          FileUtils.touch(file)
+          ChefIO::FileUtils.touch(file)
         end
 
         def deploy(src, dst)
           Chef::Log.trace("Copying temporary file #{src} into place at #{dst}")
-          FileUtils.cp(src, dst)
+          ChefIO::FileUtils.cp(src, dst)
         end
       end
     end

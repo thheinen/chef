@@ -115,7 +115,7 @@ class Chef
         end
 
         # cleanup any existing pref files without the .pref extension (created by old apt cookbook)
-        if ::File.exist?("#{APT_PREFERENCE_DIR}/#{new_resource.package_name}")
+        if ::ChefIO::File.exist?("#{APT_PREFERENCE_DIR}/#{new_resource.package_name}")
           logger.warn "Replacing legacy #{new_resource.package_name} with #{sanitized_prefname}.pref in #{APT_PREFERENCE_DIR}"
           file "#{APT_PREFERENCE_DIR}/#{new_resource.package_name}" do
             action :delete
@@ -134,7 +134,7 @@ class Chef
 
         sanitized_prefname = safe_name(new_resource.package_name)
 
-        if ::File.exist?("#{APT_PREFERENCE_DIR}/#{sanitized_prefname}.pref")
+        if ::ChefIO::File.exist?("#{APT_PREFERENCE_DIR}/#{sanitized_prefname}.pref")
           logger.info "Un-pinning #{sanitized_prefname} from #{APT_PREFERENCE_DIR}"
           file "#{APT_PREFERENCE_DIR}/#{sanitized_prefname}.pref" do
             action :delete

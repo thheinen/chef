@@ -124,12 +124,12 @@ class Chef
           return unless updating_home? && new_resource.manage_home
 
           # -m option does not work on aix, so move dir.
-          if ::File.directory?(current_resource.home)
+          if ::ChefIO::File.directory?(current_resource.home)
             logger.trace("Changing users home directory from #{current_resource.home} to #{new_resource.home}")
-            FileUtils.mv current_resource.home, new_resource.home
+            ChefIO::FileUtils.mv current_resource.home, new_resource.home
           else
             logger.trace("Creating users home directory #{new_resource.home}")
-            FileUtils.mkdir_p new_resource.home
+            ChefIO::FileUtils.mkdir_p new_resource.home
           end
         end
 

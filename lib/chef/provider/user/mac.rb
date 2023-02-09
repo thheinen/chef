@@ -186,7 +186,7 @@ class Chef
             # the default /Users/<username>, otherwise it sets it in plist
             # but does not create it. Here we'll ensure that it gets created
             # if we've been given a directory that is not the default.
-            unless ::File.directory?(new_resource.home) && ::File.exist?(new_resource.home)
+            unless ::ChefIO::File.directory?(new_resource.home) && ::ChefIO::File.exist?(new_resource.home)
               converge_by("create home directory") do
                 shell_out!("createhomedir -c -u #{new_resource.username}")
               end
@@ -395,14 +395,14 @@ class Chef
         def user_group_info
           @user_group_info ||= if new_resource.gid.is_a?(String)
                                  begin
-                                   g = Etc.getgrnam(new_resource.gid)
+                                   g = ChefIO::Etc.getgrnam(new_resource.gid)
                                    [g.name, g.gid.to_s, :modify]
                                  rescue
                                    [new_resource.gid, nil, :create]
                                  end
                                else
                                  begin
-                                   g = Etc.getgrgid(new_resource.gid)
+                                   g = ChefIO::Etc.getgrgid(new_resource.gid)
                                    [g.name, g.gid.to_s, :modify]
                                  rescue
                                    [g.username, nil, :create]
@@ -569,8 +569,8 @@ class Chef
           # dsAttrTypeStandard:RecordName           Property 1: our users record name
           # base64:dsAttrTypeNative:ShadowHashData  Property 2: our shadow hash data
 
-          import_file = ::File.join(Chef::Config["file_cache_path"], "#{new_resource.username}_password_dsimport")
-          ::File.open(import_file, "w+", 0600) do |f|
+          import_file = ::ChefIO::File.join(Chef::Config["file_cache_path"], "#{new_resource.username}_password_dsimport")
+          ::ChefIO::File.open(import_file, "w+", 0600) do |f|
             f.write <<~DSIMPORT
               0x0A 0x5C 0x3A 0x2C dsRecTypeStandard:Users 2 dsAttrTypeStandard:RecordName base64:dsAttrTypeNative:ShadowHashData
               #{new_resource.username}:#{::Base64.strict_encode64(shadow_hash_binary.string)}
@@ -581,7 +581,7 @@ class Chef
           run_dsimport(import_file, "/Local/Default", "M")
           run_dscl("create", "/Users/#{new_resource.username}", "Password", "********")
         ensure
-          ::File.delete(import_file) if import_file && ::File.exist?(import_file)
+          ::ChefIO::File.delete(import_file) if import_file && ::ChefIO::File.exist?(import_file)
         end
 
         def wait_for_user

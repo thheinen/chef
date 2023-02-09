@@ -46,7 +46,7 @@ class Chef
         end
 
         def check_lock
-          user = IO.read(PASSWORD_FILE).match(/^#{Regexp.escape(new_resource.username)}:([^:]*):/)
+          user = ChefIO::File.read(PASSWORD_FILE).match(/^#{Regexp.escape(new_resource.username)}:([^:]*):/)
 
           # If we're in whyrun mode, and the user is not created, we assume it will be
           return false if whyrun_mode? && user.nil?
@@ -121,8 +121,8 @@ class Chef
         # XXX: this was straight copypasta'd back in 2013 and I don't think we've ever evaluated using
         # a pipe to passwd(1) or evaluating modern ruby-shadow.  See https://github.com/chef/chef/pull/721
         def write_shadow_file
-          buffer = Tempfile.new("shadow", "/etc")
-          ::File.open(PASSWORD_FILE) do |shadow_file|
+          buffer = ChefIO::Tempfile.new("shadow", "/etc")
+          ::ChefIO::File.open(PASSWORD_FILE) do |shadow_file|
             shadow_file.each do |entry|
               user = entry.split(":").first
               if user == new_resource.username
@@ -135,15 +135,15 @@ class Chef
           buffer.close
 
           # FIXME: mostly duplicates code with file provider deploying a file
-          s = ::File.stat(PASSWORD_FILE)
+          s = ::ChefIO::File.stat(PASSWORD_FILE)
           mode = s.mode & 0o7777
           uid  = s.uid
           gid  = s.gid
 
-          FileUtils.chown uid, gid, buffer.path
-          FileUtils.chmod mode, buffer.path
+          ChefIO::FileUtils.chown uid, gid, buffer.path
+          ChefIO::FileUtils.chmod mode, buffer.path
 
-          FileUtils.mv buffer.path, PASSWORD_FILE
+          ChefIO::FileUtils.mv buffer.path, PASSWORD_FILE
         end
 
         def updated_password(entry)

@@ -43,6 +43,7 @@ require_relative "mixin/properties"
 require_relative "mixin/provides"
 require_relative "dsl/universal"
 require_relative "constants"
+require_relative "chef_io"
 
 class Chef
   class Resource

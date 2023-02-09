@@ -64,7 +64,7 @@ class Chef
                              "binary" => "binary1" }.freeze
 
       load_current_value do |new_resource|
-        current_value_does_not_exist! unless ::File.exist? new_resource.path
+        current_value_does_not_exist! unless ::ChefIO::File.exist? new_resource.path
         entry new_resource.entry if entry_in_plist? new_resource.entry, new_resource.path
 
         setting = setting_from_plist new_resource.entry, new_resource.path
@@ -84,7 +84,7 @@ class Chef
         converge_if_changed :path do
           converge_by "create new plist: '#{new_resource.path}'" do
             file new_resource.path do
-              content({}.to_plist)
+              content {}.to_plist
               owner new_resource.owner
               group new_resource.group
               mode new_resource.mode if property_is_set?(:mode)
@@ -92,7 +92,7 @@ class Chef
           end
         end
 
-        plist_file_name = ::File.basename(new_resource.path)
+        plist_file_name = ::ChefIO::File.basename(new_resource.path)
 
         converge_if_changed :entry do
           converge_by "add entry \"#{new_resource.entry}\" to #{plist_file_name}" do

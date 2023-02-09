@@ -41,7 +41,7 @@ class Chef
         tempfile_dirnames.each do |tempfile_dirname|
 
           # preserving the file extension of the target filename should be considered a public API
-          tf = ::Tempfile.open([tempfile_basename, tempfile_extension], tempfile_dirname)
+          tf = ::ChefIO::Tempfile.open([tempfile_basename, tempfile_extension], tempfile_dirname)
           break
         rescue SystemCallError => e
           message = "Creating temp file under '#{tempfile_dirname}' failed with: '#{e.message}'"
@@ -64,7 +64,7 @@ class Chef
       # as the arguments to Tempfile.new() consistently.
       #
       def tempfile_basename
-        basename = ::File.basename(@new_resource.path, tempfile_extension)
+        basename = ::ChefIO::File.basename(@new_resource.path, tempfile_extension)
         # the leading "[.]chef-" here should be considered a public API and should not be changed
         basename.insert 0, "chef-"
         basename.insert 0, "." unless ChefUtils.windows? # dotfile if we're not on windows
@@ -74,7 +74,7 @@ class Chef
       # this is similar to File.extname() but greedy about the extension (from the first dot, not the last dot)
       def tempfile_extension
         # complexity here is due to supporting mangling non-UTF8 strings (e.g. latin-1 filenames with characters that are illegal in UTF-8)
-        b = File.basename(@new_resource.path)
+        b = ::ChefIO::File.basename(@new_resource.path)
         i = b.index(".")
         i.nil? ? "" : b[i..].scrub
       end
@@ -85,17 +85,17 @@ class Chef
         # wind up deploying, but our enclosing directory for the destdir may not exist yet, so
         # instead we can reliably always create a Tempfile to compare against in Dir::tmpdir
         if Chef::Config[:why_run]
-          [ Dir.tmpdir ]
+          [ ::ChefIO::Dir.tmpdir ]
         else
           case Chef::Config[:file_staging_uses_destdir]
           when :auto
             # In auto mode we try the destination directory first and fallback to ENV['TMP'] if
             # that doesn't work.
-            [ ::File.dirname(@new_resource.path), Dir.tmpdir ]
+            [ ::ChefIO::File.dirname(@new_resource.path), ::ChefIO::Dir.tmpdir ]
           when true
-            [ ::File.dirname(@new_resource.path) ]
+            [ ::ChefIO::File.dirname(@new_resource.path) ]
           when false
-            [ Dir.tmpdir ]
+            [ ::ChefIO::Dir.tmpdir ]
           else
             raise Chef::Exceptions::ConfigurationError, "Unknown setting '#{Chef::Config[:file_staging_uses_destdir]}' for Chef::Config[:file_staging_uses_destdir]. Possible values are :auto, true or false."
           end

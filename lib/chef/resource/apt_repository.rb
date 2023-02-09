@@ -271,9 +271,9 @@ class Chef
         # @return [void]
         def install_key_from_uri(key)
           key_name = key.gsub(/[^0-9A-Za-z\-]/, "_")
-          cached_keyfile = ::File.join(Chef::Config[:file_cache_path], key_name)
-          tmp_dir = Dir.mktmpdir(".gpg")
-          at_exit { FileUtils.remove_entry(tmp_dir) }
+          cached_keyfile = ::ChefIO::File.join(Chef::Config[:file_cache_path], key_name)
+          tmp_dir = ChefIO::Dir.mktmpdir(".gpg")
+          at_exit { ChefIO::FileUtils.remove_entry(tmp_dir) }
 
           declare_resource(key_type(key), cached_keyfile) do
             source key
